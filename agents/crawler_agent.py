@@ -59,47 +59,44 @@ class CrawlerAgent(BaseAgent):
 """
 
     async def process(self, message: str, **kwargs) -> str:
-        """크롤링 관련 메시지 처리 - Google Search로 실시간 정보 검색"""
+        """크롤링 관련 메시지 처리 - 항상 Google Search로 실시간 정보 검색"""
         clean_message = message
         for trigger in self.triggers:
             clean_message = clean_message.replace(trigger, "").strip()
 
-        if clean_message:
-            today = self.get_today_kst()
+        if not clean_message:
+            clean_message = "P!CKTO 스포츠 정보 수집 AI 스카우트 소개"
 
-            # 경기 일정/총정리 요청인지 확인
-            schedule_keywords = ["경기", "일정", "총정리", "리스트", "오늘", "내일", "스케줄"]
-            is_schedule_request = any(kw in clean_message for kw in schedule_keywords)
+        # 경기 일정/총정리 요청인지 확인
+        schedule_keywords = ["경기", "일정", "총정리", "리스트", "오늘", "내일", "스케줄"]
+        is_schedule_request = any(kw in clean_message for kw in schedule_keywords)
 
-            if is_schedule_request:
-                # 경기 일정 검색 쿼리 생성
-                sport_type = ""
-                if "야구" in clean_message or "KBO" in clean_message.upper():
-                    sport_type = "KBO 야구"
-                elif "축구" in clean_message or "K리그" in clean_message:
-                    sport_type = "K리그 축구"
-                elif "농구" in clean_message or "KBL" in clean_message.upper():
-                    sport_type = "KBL 농구"
-                elif "배구" in clean_message or "V리그" in clean_message:
-                    sport_type = "V리그 배구"
-                else:
-                    sport_type = "KBO K리그 KBL V리그"
-
-                query = f"{today} {sport_type} 경기 일정 선발투수 선발라인업 시간 구장"
+        if is_schedule_request:
+            # 경기 일정 검색 쿼리 생성
+            sport_type = ""
+            if "야구" in clean_message or "KBO" in clean_message.upper() or "WBC" in clean_message.upper():
+                sport_type = "KBO WBC 야구"
+            elif "축구" in clean_message or "K리그" in clean_message:
+                sport_type = "K리그 축구"
+            elif "농구" in clean_message or "KBL" in clean_message.upper() or "NBA" in clean_message.upper():
+                sport_type = "KBL NBA 농구"
+            elif "배구" in clean_message or "V리그" in clean_message:
+                sport_type = "V리그 배구"
             else:
-                query = f"{today} {clean_message}"
+                sport_type = "KBO K리그 KBL V리그"
 
-            return await gemini_service.chat_with_search(
-                query,
-                self.get_scout_prompt(),
-                kwargs.get("history")
-            )
+            query = f"오늘 {sport_type} 경기 일정 선발투수 선발라인업 시간 구장"
         else:
-            return await self.respond(
-                "어떤 주제의 뉴스나 정보를 찾아드릴까요?\n"
-                "예: 오늘 야구 경기 총정리, K리그 이적 뉴스, AI 스포츠 예측 기술 등",
-                kwargs.get("history")
-            )
+            query = clean_message
+
+        # 항상 Google Search 사용 - 실시간 날짜 인식
+        prompt = self.get_scout_prompt()
+        response = await gemini_service.chat_with_search(
+            query,
+            prompt,
+            kwargs.get("history")
+        )
+        return f"{self.emoji} **{self.name}**\n\n{response}"
 
     async def fetch_sports_news(self, sport: str = "전체") -> str:
         """스포츠 뉴스 수집 (K리그, KBO, KBL, V리그)"""
