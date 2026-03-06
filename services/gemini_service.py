@@ -9,6 +9,8 @@ class GeminiService:
     def __init__(self):
         self.client = genai.Client(api_key=settings.gemini_api_key)
         self.model_name = settings.gemini_model
+        # Google Search Grounding은 gemini-2.0-flash에서 더 잘 작동
+        self.search_model = "gemini-2.0-flash"
         self.max_tokens = settings.max_tokens
 
     async def chat(
@@ -44,9 +46,11 @@ class GeminiService:
                 config.tools = [types.Tool(google_search=types.GoogleSearch())]
                 print(f"[Gemini] Google Search Grounding 활성화됨")
 
-            print(f"[Gemini] API 호출 시작...")
+            # 검색 시 gemini-2.0-flash 사용 (더 나은 Search Grounding 지원)
+            model_to_use = self.search_model if use_search else self.model_name
+            print(f"[Gemini] API 호출 시작... (model={model_to_use})")
             response = self.client.models.generate_content(
-                model=self.model_name,
+                model=model_to_use,
                 contents=full_prompt,
                 config=config,
             )
