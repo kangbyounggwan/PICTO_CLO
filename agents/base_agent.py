@@ -1,6 +1,9 @@
 """기본 에이전트 클래스"""
 
 from abc import ABC, abstractmethod
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
 from config.agents import AGENT_PROFILES
 from services.gemini_service import gemini_service
 
@@ -15,7 +18,20 @@ class BaseAgent(ABC):
         self.name = profile["name"]
         self.emoji = profile["emoji"]
         self.triggers = profile["triggers"]
-        self.system_prompt = profile["system_prompt"]
+        self._base_system_prompt = profile["system_prompt"]
+
+    @staticmethod
+    def get_today_kst() -> str:
+        """현재 날짜를 KST 기준으로 반환"""
+        kst = ZoneInfo("Asia/Seoul")
+        return datetime.now(kst).strftime("%Y년 %m월 %d일")
+
+    @property
+    def system_prompt(self) -> str:
+        """동적으로 오늘 날짜가 포함된 시스템 프롬프트 반환"""
+        today = self.get_today_kst()
+        date_prefix = f"[필수] 오늘 날짜: {today} (KST 기준)\n모든 응답에서 이 날짜를 사용해. 다른 날짜 사용 금지!\n\n"
+        return date_prefix + self._base_system_prompt
 
     async def respond(
         self,
