@@ -29,8 +29,13 @@ class CrawlerAgent(BaseAgent):
 모든 응답에서 이 날짜를 사용해. 다른 날짜 사용 금지!
 
 [DOMAIN EXPERTISE]
-- 종목: 축구(K리그), 야구(KBO), 농구(KBL), 배구(V리그)
+- 야구: KBO, MLB, NPB, WBC, 프리미어12, 올림픽
+- 축구: K리그, EPL, 라리가, 분데스리가, 세리에A, 월드컵, AFC
+- 농구: KBL, NBA, FIBA
+- 배구: V리그, 국제대회
 - 기술: AI/ML 예측 모델, 스포츠 데이터 분석
+
+모든 스포츠 정보를 수집해. 국내 리그만 한정하지 말 것!
 
 [요청 유형별 응답]
 
