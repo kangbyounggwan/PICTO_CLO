@@ -56,6 +56,12 @@ class CrawlerAgent(BaseAgent):
    🎯 P!CKTO 영향도: {{상/중/하}}
 
 출처 명시 필수.
+
+[중요] 응답 규칙:
+- 검색 결과를 바탕으로 상세하게 답변할 것
+- "경기가 없다"고 판단하기 전에 충분히 검색할 것
+- 최소 200자 이상 상세하게 응답할 것
+- 검색된 출처/링크를 반드시 포함할 것
 """
 
     async def process(self, message: str, **kwargs) -> str:
@@ -88,8 +94,8 @@ class CrawlerAgent(BaseAgent):
             else:
                 sport_type = "KBO K리그 KBL V리그"
 
-            # 날짜를 쿼리에 명시적으로 포함
-            query = f"{today} {sport_type} 경기 일정 선발투수 선발라인업 시간 구장"
+            # 날짜를 쿼리에 명시적으로 포함 (더 상세한 쿼리)
+            query = f"{today} {sport_type} 경기 일정 오늘 경기 뉴스 하이라이트"
         else:
             # 일반 쿼리에도 날짜 포함
             query = f"{today} {clean_message}"
