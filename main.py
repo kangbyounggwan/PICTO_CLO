@@ -14,12 +14,16 @@ from telegram.ext import Application, CommandHandler, MessageHandler, ContextTyp
 from config.settings import settings
 from config.agents import AGENT_PROFILES
 from services.gemini_service import GeminiService
+from agents.crawler_agent import CrawlerAgent
 from database.models import Database
 
 
 # Gemini 서비스
 gemini = GeminiService()
 db = Database()
+
+# Scout 에이전트 (Google Search 사용)
+scout_agent = CrawlerAgent()
 
 
 def escape_telegram(text: str) -> str:
@@ -74,19 +78,27 @@ def create_bot_handlers(agent_type: str, bot_username: str):
 
         try:
             # Gemini 응답 생성
-            response = await gemini.chat(
-                message=user_message,
-                system_prompt=profile["system_prompt"],
-                conversation_history=None
-            )
+            if agent_type == "crawler":
+                # Scout: Google Search Grounding 사용
+                response = await scout_agent.process(user_message)
+            else:
+                # 다른 에이전트: 일반 chat
+                response = await gemini.chat(
+                    message=user_message,
+                    system_prompt=profile["system_prompt"],
+                    conversation_history=None
+                )
 
             # 특수문자 이스케이프
             safe_response = escape_telegram(response)
 
-            # 응답 전송
-            emoji = profile["emoji"]
-            name = profile["name"]
-            final_text = f"{emoji} {name}\n\n{safe_response}"
+            # 응답 전송 (crawler는 이미 이모지/이름 포함)
+            if agent_type == "crawler":
+                final_text = safe_response
+            else:
+                emoji = profile["emoji"]
+                name = profile["name"]
+                final_text = f"{emoji} {name}\n\n{safe_response}"
 
             # 4096자 제한
             if len(final_text) > 4000:
