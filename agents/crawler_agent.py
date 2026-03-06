@@ -81,21 +81,22 @@ class CrawlerAgent(BaseAgent):
         today = self.get_today_kst()
 
         if is_schedule_request:
-            # 경기 일정 검색 쿼리 생성
+            # 경기 일정 검색 쿼리 생성 (국내 + 해외 리그 전체)
             sport_type = ""
-            if "야구" in clean_message or "KBO" in clean_message.upper() or "WBC" in clean_message.upper():
-                sport_type = "KBO WBC 야구"
-            elif "축구" in clean_message or "K리그" in clean_message:
-                sport_type = "K리그 축구"
+            if "야구" in clean_message or "KBO" in clean_message.upper() or "MLB" in clean_message.upper() or "WBC" in clean_message.upper():
+                sport_type = "KBO MLB NPB WBC 야구"
+            elif "축구" in clean_message or "K리그" in clean_message or "EPL" in clean_message.upper() or "라리가" in clean_message:
+                sport_type = "K리그 EPL 라리가 분데스리가 세리에A 챔피언스리그 축구"
             elif "농구" in clean_message or "KBL" in clean_message.upper() or "NBA" in clean_message.upper():
                 sport_type = "KBL NBA 농구"
             elif "배구" in clean_message or "V리그" in clean_message:
                 sport_type = "V리그 배구"
             else:
-                sport_type = "KBO K리그 KBL V리그"
+                # 전체 스포츠 검색 (국내 + 해외 모든 주요 리그)
+                sport_type = "KBO MLB EPL 라리가 챔피언스리그 NBA KBL V리그 스포츠"
 
-            # 날짜를 쿼리에 명시적으로 포함 (더 상세한 쿼리)
-            query = f"{today} {sport_type} 경기 일정 오늘 경기 뉴스 하이라이트"
+            # 날짜를 쿼리에 명시적으로 포함
+            query = f"{today} {sport_type} 오늘 경기 일정"
         else:
             # 일반 쿼리에도 날짜 포함
             query = f"{today} {clean_message}"
