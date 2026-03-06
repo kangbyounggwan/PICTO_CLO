@@ -71,6 +71,9 @@ class CrawlerAgent(BaseAgent):
         schedule_keywords = ["경기", "일정", "총정리", "리스트", "오늘", "내일", "스케줄"]
         is_schedule_request = any(kw in clean_message for kw in schedule_keywords)
 
+        # 오늘 날짜를 쿼리에 명시적으로 포함
+        today = self.get_today_kst()
+
         if is_schedule_request:
             # 경기 일정 검색 쿼리 생성
             sport_type = ""
@@ -85,9 +88,11 @@ class CrawlerAgent(BaseAgent):
             else:
                 sport_type = "KBO K리그 KBL V리그"
 
-            query = f"오늘 {sport_type} 경기 일정 선발투수 선발라인업 시간 구장"
+            # 날짜를 쿼리에 명시적으로 포함
+            query = f"{today} {sport_type} 경기 일정 선발투수 선발라인업 시간 구장"
         else:
-            query = clean_message
+            # 일반 쿼리에도 날짜 포함
+            query = f"{today} {clean_message}"
 
         # 항상 Google Search 사용 - 실시간 날짜 인식
         prompt = self.get_scout_prompt()
