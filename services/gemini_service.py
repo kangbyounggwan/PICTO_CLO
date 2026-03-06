@@ -20,6 +20,7 @@ class GeminiService:
     ) -> str:
         """Gemini API로 대화 생성 (선택적 Google Search Grounding)"""
         try:
+            print(f"[Gemini] use_search={use_search}, model={self.model_name}")
             # 시스템 프롬프트 + 히스토리 + 현재 메시지 구성
             full_prompt = f"[시스템 지침]\n{system_prompt}\n\n"
 
@@ -41,16 +42,20 @@ class GeminiService:
             # Google Search Grounding 활성화
             if use_search:
                 config.tools = [types.Tool(google_search=types.GoogleSearch())]
+                print(f"[Gemini] Google Search Grounding 활성화됨")
 
+            print(f"[Gemini] API 호출 시작...")
             response = self.client.models.generate_content(
                 model=self.model_name,
                 contents=full_prompt,
                 config=config,
             )
 
+            print(f"[Gemini] API 호출 성공, 응답 길이: {len(response.text)}")
             return response.text
 
         except Exception as e:
+            print(f"[Gemini] ERROR: {str(e)}")
             return f"⚠️ 오류가 발생했습니다: {str(e)}"
 
     async def chat_with_search(
