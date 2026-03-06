@@ -20,6 +20,7 @@ def get_int_env(key: str, default: int = 0) -> int:
 class Settings(BaseModel):
     # API Keys
     gemini_api_key: str = os.getenv("GEMINI_API_KEY", "")
+    serpapi_key: str = os.getenv("SERPAPI_KEY", "")
 
     # Telegram Bots (3개)
     marky_bot_token: str = os.getenv("MARKY_BOT_TOKEN", "")

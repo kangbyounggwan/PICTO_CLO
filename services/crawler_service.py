@@ -4,6 +4,7 @@ import httpx
 import feedparser
 from bs4 import BeautifulSoup
 from dataclasses import dataclass
+from config.settings import settings
 
 
 @dataclass
@@ -24,6 +25,15 @@ class CrawlerService:
 
     def __init__(self):
         self.client = httpx.AsyncClient(timeout=30.0)
+        self._search_service = None
+
+    @property
+    def search_service(self):
+        """SerpAPI 서비스 lazy loading"""
+        if self._search_service is None and settings.serpapi_key:
+            from services.search_service import search_service
+            self._search_service = search_service
+        return self._search_service
 
     async def fetch_news(self, keyword: str | None = None, limit: int = 5) -> list[NewsItem]:
         """뉴스 피드에서 기사 가져오기"""
@@ -71,7 +81,14 @@ class CrawlerService:
             return f"스크래핑 실패: {str(e)}"
 
     async def search_news(self, query: str) -> str:
-        """뉴스 검색 결과를 포맷팅된 문자열로 반환"""
+        """뉴스 검색 결과를 포맷팅된 문자열로 반환 (SerpAPI 우선)"""
+        # SerpAPI가 설정되어 있으면 실시간 검색 사용
+        if self.search_service:
+            results = await self.search_service.search_news(query, num_results=5)
+            if results:
+                return await self.search_service.format_results(query, results, "뉴스")
+
+        # Fallback: RSS 피드 기반 검색
         news_items = await self.fetch_news(keyword=query, limit=5)
 
         if not news_items:
@@ -84,6 +101,14 @@ class CrawlerService:
             result += f"   🔗 {item.link}\n\n"
 
         return result
+
+    async def web_search(self, query: str) -> str:
+        """웹 검색 (SerpAPI 사용)"""
+        if not self.search_service:
+            return "⚠️ 웹 검색 기능을 사용하려면 SERPAPI_KEY를 설정해주세요."
+
+        results = await self.search_service.search(query, num_results=5)
+        return await self.search_service.format_results(query, results, "검색")
 
     async def close(self):
         await self.client.aclose()
